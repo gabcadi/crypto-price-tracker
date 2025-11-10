@@ -15,7 +15,8 @@ namespace CryptoPriceTracker.Api.Data
         {
             modelBuilder.Entity<CryptoAsset>().HasData(
                 new CryptoAsset { Id = 1, Name = "Bitcoin", Symbol = "BTC", ExternalId = "bitcoin" },
-                new CryptoAsset { Id = 2, Name = "Ethereum", Symbol = "ETH", ExternalId = "ethereum" }
+                new CryptoAsset { Id = 2, Name = "Ethereum", Symbol = "ETH", ExternalId = "ethereum" },
+                new CryptoAsset { Id = 3, Name = "Tether", Symbol = "USDT", ExternalId = "tether" }
             );
         }
     }

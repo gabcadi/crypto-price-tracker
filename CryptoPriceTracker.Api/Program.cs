@@ -1,3 +1,7 @@
+using CryptoPriceTracker.Api.Data;
+using CryptoPriceTracker.Api.Services;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews().AddNewtonsoftJson();
