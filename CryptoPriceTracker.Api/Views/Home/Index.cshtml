@@ -2,17 +2,311 @@
     ViewData["Title"] = "Crypto Price Tracker";
 }
 
-<h1>Crypto Price Tracker</h1>
+<div class="header finisher-header" style="width: 100%; height: 400px;">
+	<h1>Welcome to my<br />Crypto Price Tracker</h1>
+	<button id="updateBtn" class="btn-main">Get the latest prices here!</button>
+</div>
 
-<button id="updateBtn">Update Prices</button>
 <div id="statusMessage"></div>
 
-<script>
-    document.getElementById("updateBtn").addEventListener("click", async () => {
-        const response = await fetch("/api/crypto/update-prices", {
-            method: "POST"
-        });
-        const message = response.ok ? "✅ Prices updated!" : "❌ Failed to update.";
-        document.getElementById("statusMessage").innerText = message;
-    });
+<div id="loader" class="loader hidden">
+	<div class="spinner"></div>
+	<p>Loading latest prices...</p>
+</div>
+
+<table id="cryptoTable" class="crypto-table">
+	<thead>
+		<tr>
+			<th></th>
+			<th>Name</th>
+			<th>Symbol</th>
+			<th>Price</th>
+			<th>Currency</th>
+			<th>Last Updated</th>
+			<th>Trend</th>
+		</tr>
+	</thead>
+	<tbody></tbody>
+</table>
+
+<p style="text-align:center; font-size:0.9em; color:gray;">
+	Note: Data provided by <a href="https://www.coingecko.com" target="_blank">CoinGecko</a>.
+	Prices are updated approximately every 1‑2 minutes.
+</p>
+
+<style>
+	body {
+		height: 100%;
+		margin: 0;
+		padding: 0;
+		font-family: 'Segoe UI', Arial, sans-serif;
+		overflow: hidden;
+	}
+
+	h1 {
+		text-align: center;
+		margin-top: 28px;
+		color: #FFFFFF;
+		font-size: 4em
+	}
+
+	.btn-main {
+		display: block;
+		margin: 20px auto 10px auto;
+		padding: 10px 24px;
+		background: #e27c00;
+		color: #fff;
+		border: none;
+		border-radius: 6px;
+		font-size: 1.1em;
+		cursor: pointer;
+		transition: all 0.1s;
+		box-shadow: 0 3px 0 #ab5e00;
+	}
+
+		.btn-main:hover {
+			background: #bd6a04;
+			transform: translateY(1px);
+		}
+
+		.btn-main:active {
+			transform: translateY(6px);
+			box-shadow: 0 2px 0 #bd6a04;
+		}
+
+	#statusMessage {
+		position: fixed;
+		top: 30px;
+		right: 30px;
+		min-width: 180px;
+		max-width: 320px;
+		background: #222;
+		color: #fff;
+		padding: 12px 16px;
+		border-radius: 6px;
+		font-size: 1.1em;
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.5s;
+		z-index: 9999;
+	}
+
+		#statusMessage.show {
+			opacity: 1;
+			pointer-events: auto;
+		}
+
+	.crypto-table {
+		width: auto;
+		margin: 0 auto 32px auto;
+		border-collapse: collapse;
+		background: #fff;
+		border-radius: 5px;
+		overflow: hidden;
+	}
+
+		.crypto-table th, .crypto-table td {
+			padding: 12px 10px;
+			text-align: center;
+		}
+
+		.crypto-table th {
+			background: #120095;
+			color: #fff;
+			font-weight: 600;
+			letter-spacing: 0.5px;
+		}
+
+		.crypto-table tr:nth-child(even) {
+			background: #f2f6fa;
+		}
+
+		.crypto-table tr:hover {
+			background: #eaf3fb;
+			transition: background 0.2s;
+		}
+
+		.crypto-table img {
+			border-radius: 50%;
+			box-shadow: 0 1px 4px rgba(44, 62, 80, 0.10);
+			background: #f7f9fa;
+		}
+
+	.trend-up {
+		color: #27ae60;
+		font-weight: bold;
+	}
+
+	.trend-down {
+		color: #e74c3c;
+		font-weight: bold;
+	}
+
+	.trend-same {
+		color: #888;
+		font-weight: bold;
+	}
+
+	.arrow {
+		border: solid;
+		border-width: 0 3px 3px 0;
+		display: inline-block;
+		padding: 3px;
+	}
+
+	.down {
+		transform: rotate(45deg);
+		-webkit-transform: rotate(45deg);
+		margin: 0px 2px 3px 0px;
+	}
+
+	.up {
+		transform: rotate(-135deg);
+		-webkit-transform: rotate(-135deg);
+		margin: 3px 2px 0px 0px;
+	}
+
+	.loader {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background: rgba(255, 255, 255, 0.8);
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+		z-index: 9999;
+		backdrop-filter: blur(3px);
+		transition: opacity 0.3s ease;
+	}
+
+		.loader.hidden {
+			display: none;
+		}
+
+	.spinner {
+		border: 6px solid #e0e0e0;
+		border-top: 6px solid #2d8cf0;
+		border-radius: 50%;
+		width: 60px;
+		height: 60px;
+		animation: spin 1s linear infinite;
+		margin-bottom: 12px;
+	}
+
+	@@keyframes spin {
+		0% {
+			transform: rotate(0deg);
+		}
+
+		100% {
+			transform: rotate(360deg);
+		}
+	}
+</style>
+
+@* // This is a pre-built header from https://www.finisher.co/lab/header/ *@
+<script src="~/js/finisher-header.es5.min.js"></script>
+
+<script type="text/javascript">
+	async function showLoader(ms) {
+		document.getElementById("loader").classList.remove("hidden");
+		loader.classList.remove("hidden");
+		await new Promise(resolve => setTimeout(resolve, ms));
+	}
+
+	function hideLoader() {
+		document.getElementById("loader").classList.add("hidden");
+	}
+
+	new FinisherHeader({count:100,size:{min:2,max:10,pulse:0.2},speed:{x:{min:0,max:0.4},y:{min:0,max:0.6}},colors:{background:"#160f49",particles:["#fbfcca","#d7f3fe","#ffd0a7"]},blending:"lighten",opacity:{center:1,edge:0},skew:-5,shapes:["c","t"]});
+
+	function getTrendIcon(latestPrice, previousPrice) {
+		if (previousPrice == null || latestPrice == null || latestPrice == previousPrice)
+			return '<span class="trend-same">➖ 0%</span>';
+
+		const diff = ((latestPrice - previousPrice) / previousPrice) * 100;
+
+		// If the change is less than 0.01%, consider it the same
+		// if (Math.abs(diff) < 0.01)
+		// 	return '<span class="trend-same">➖</span>';
+
+		const formattedDiff = diff.toFixed(2);
+
+		if (diff > 0)
+			return `<span class="trend-up"><i class="arrow up"></i> +${formattedDiff}%</span>`;
+		else
+			return `<span class="trend-down"><i class="arrow down"></i> ${formattedDiff}%</span>`;
+	}
+
+	async function loadPrices() {
+		try {
+			await showLoader(800);
+			const res = await fetch('/api/crypto/latestPrice-prices');
+			const data = await res.json();
+			const tbody = document.querySelector('#cryptoTable tbody');
+			tbody.innerHTML = '';
+
+			data.forEach(coin => {
+				const trend = getTrendIcon(coin.latestPrice, coin.previousPrice);
+
+				tbody.innerHTML += `
+					<tr>
+						<td>
+							${coin.iconUrl ? `<img src="${coin.iconUrl}" alt="${coin.name}" width="32"/>` : ''}
+						</td>
+						<td>${coin.name}</td>
+						<td>${coin.symbol}</td>
+						<td>${coin.latestPrice ?? '-'}</td>
+						<td>USD ($)</td>
+						<td class="last-updated" data-date="${coin.lastUpdated}"></td>
+						<td>${trend}</td>
+					</tr>
+				`;
+			});
+
+			// Convert UTC dates to local time
+			document.querySelectorAll('.last-updated').forEach(td => {
+				const utc = td.getAttribute('data-date');
+				if (utc) {
+					td.textContent = new Date(
+						utc.endsWith('Z') ? utc : utc + 'Z'
+					).toLocaleString(undefined, {
+						year: 'numeric',
+						month: 'short',
+						day: '2-digit',
+						hour: '2-digit',
+						minute: '2-digit',
+						second: '2-digit',
+						hour12: true
+					});
+				}
+			});
+		} catch(err) {
+			console.error("Error loading prices:", err);
+			document.getElementById("statusMessage").innerText = "❌ Error loading data.";
+		} finally {
+			hideLoader();
+		}
+	}
+
+	function showToast(message, isSuccess = true) {
+		const el = document.getElementById("statusMessage");
+		el.textContent = message;
+		el.style.background = isSuccess ? "#27ae60" : "#e74c3c";
+		el.classList.add("show");
+		setTimeout(() => el.classList.remove("show"), 2500);
+	}
+
+	document.getElementById("updateBtn").addEventListener("click", async () => {
+		await showLoader(100);
+		const response = await fetch("/api/crypto/update-prices", { method: "POST" });
+		showToast(response.ok ? "✅ Prices updated!" : "❌ Failed to update.", response.ok);
+		await loadPrices();
+		hideLoader();
+	});
+
+	window.onload = loadPrices;
 </script>

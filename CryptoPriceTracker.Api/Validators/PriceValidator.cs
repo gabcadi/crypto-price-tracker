@@ -1,3 +1,5 @@
+using CryptoPriceTracker.Api.Models;
+
 public class PriceValidator
 {
     public bool ShouldSavePrice(decimal newPrice, DateTime date, List<CryptoPriceHistory> history)
